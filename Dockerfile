@@ -1,28 +1,50 @@
-# Aktifkan mod_rewrite Apache untuk routing Laravel
-RUN a2enmod rewrite
+# ==========================================
+# Optimized Production Dockerfile for Laravel
+# ==========================================
+FROM php:8.2-apache
 
-# Hapus semua kemungkinan symlink MPM event agar mati total
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-available/mpm_event.load
+# 1. Install System Dependencies & PHP Extensions
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Atur Document Root Apache agar mengarah ke folder public Laravel
+# 2. Configure Apache for Laravel (Mengarahkan ke folder public)
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Install Composer
+# 3. Enable Apache Rewrite Module untuk Routing Laravel
+RUN a2enmod rewrite
+
+# 4. FIX BENTROK MPM: Matikan mpm_event dan pastikan mpm_prefork aktif sebelum running
+RUN a2dismod mpm_event || true
+RUN a2enmod mpm_prefork || true
+
+# 5. Install Composer Terbaru
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Atur folder kerja di dalam container
+# 6. Atur Folder Kerja
 WORKDIR /var/www/html
 
-# Salin seluruh kode project ke dalam container
+# 7. Salin Seluruh Source Code Project
 COPY . .
 
-# Berikan hak akses penuh ke folder storage dan bootstrap/cache Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# 8. Atur Hak Akses Folder Storage & Cache Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Jalankan instalasi library PHP via composer
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# 9. Jalankan Instalasi Composer (Optimasi Production)
+RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
 
-# PAKSA MATIKAN MODUL BENTROK SAAT CONTAINER STARTUP SEBELUM APACHE JALAN
-CMD ["sh", "-c", "a2dismod mpm_event && a2enmod mpm_prefork && apache2-foreground"]
+# 10. Buka Port 80 (Akan otomatis dimapping oleh variabel PORT di Railway)
+EXPOSE 80
+
+# 11. Jalankan Apache Web Server
+CMD ["apache2-foreground"]
