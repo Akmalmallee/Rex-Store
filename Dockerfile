@@ -14,7 +14,14 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql gd zip bcmath
 
 # Aktifkan mod_rewrite Apache untuk routing Laravel
+# Aktifkan mod_rewrite Apache untuk routing Laravel
 RUN a2enmod rewrite
+
+# TARO DI SINI MAL:
+RUN a2dismod mpm_event
+
+# Atur Document Root Apache agar mengarah ke folder public Laravel
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
 # Atur Document Root Apache agar mengarah ke folder public Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
