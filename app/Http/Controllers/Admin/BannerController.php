@@ -25,11 +25,16 @@ class BannerController extends Controller
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'video' => 'nullable|mimes:mp4,webm,ogg,avi,mov|max:51200',
             'link' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
         $data['image'] = $request->file('image')->store('banners', 'public');
+
+        if ($request->hasFile('video')) {
+            $data['video'] = $request->file('video')->store('banners/videos', 'public');
+        }
 
         Banner::create($data);
 
@@ -51,12 +56,17 @@ class BannerController extends Controller
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'video' => 'nullable|mimes:mp4,webm,ogg,avi,mov|max:51200',
             'link' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('banners', 'public');
+        }
+
+        if ($request->hasFile('video')) {
+            $data['video'] = $request->file('video')->store('banners/videos', 'public');
         }
 
         $banner->update($data);

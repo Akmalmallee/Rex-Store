@@ -40,6 +40,21 @@
             </div>
 
             <div>
+                <label for="video" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video Background (optional)</label>
+                @if($banner->video)
+                <div class="mb-3">
+                    <video class="w-48 h-28 rounded-lg object-cover" muted controls>
+                        <source src="{{ asset('storage/' . $banner->video) }}" type="video/mp4">
+                    </video>
+                </div>
+                @endif
+                <input type="file" id="video" name="video" accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                    class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#C8A951]/10 file:text-[#C8A951] hover:file:bg-[#C8A951]/20 transition-colors @error('video') border-red-500 @enderror">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave empty to keep current video. MP4, WebM, OGG, or MOV. Max 50MB.</p>
+                @error('video') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
                 <label for="link" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link URL</label>
                 <input type="text" id="link" name="link" value="{{ old('link', $banner->link) }}"
                     class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-[#C8A951] focus:ring-[#C8A951] @error('link') border-red-500 @enderror">

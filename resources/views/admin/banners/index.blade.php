@@ -18,7 +18,7 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-800/80">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Image</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Image / Video</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subtitle</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
@@ -29,7 +29,18 @@
                     @forelse($banners as $banner)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <img src="{{ asset('storage/' . $banner->image) }}" alt="{{ $banner->title }}" class="w-24 h-14 rounded-lg object-cover">
+                            @if($banner->video)
+                                <div class="relative w-24 h-14 rounded-lg overflow-hidden bg-gray-900">
+                                    <video class="w-full h-full object-cover" muted autoplay loop playsinline>
+                                        <source src="{{ asset('storage/' . $banner->video) }}" type="video/mp4">
+                                    </video>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white/70" fill="currentColor" viewBox="0 0 20 20"><path d="M6 4l10 6-10 6V4z"/></svg>
+                                    </div>
+                                </div>
+                            @else
+                                <img src="{{ asset('storage/' . $banner->image) }}" alt="{{ $banner->title }}" class="w-24 h-14 rounded-lg object-cover">
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $banner->title }}</span>

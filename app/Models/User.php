@@ -42,4 +42,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(Wishlist::class);
     }
+
+    public function bodyProfile()
+    {
+        return $this->hasOne(BodyProfile::class);
+    }
+
+    public function fittingPhotos()
+    {
+        return $this->hasMany(UserPhoto::class);
+    }
+
+    public function fittingSessions()
+    {
+        return $this->hasMany(FittingSession::class);
+    }
+
+    public function recommendations()
+    {
+        return $this->hasMany(Recommendation::class);
+    }
 }

@@ -9,13 +9,17 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentAccount;
+use App\Services\Payment\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    public function __construct(
+        private PaymentService $paymentService
+    ) {}
+
     public function index()
     {
         $cart = Cart::where('user_id', Auth::id())
@@ -59,6 +63,7 @@ class CheckoutController extends Controller
                 'city' => $request->city,
                 'phone' => $request->phone,
                 'notes' => $request->notes,
+                'recipient_name' => $request->recipient_name,
                 'shipping_courier' => $request->shipping_courier,
                 'payment_method' => $request->payment_method,
                 'payment_status' => 'pending',
@@ -77,11 +82,11 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            Payment::create([
-                'order_id' => $order->id,
-                'method' => $request->payment_method,
-                'payment_number' => $this->generatePaymentNumber($request->payment_method),
+            $this->paymentService->createPayment($order, $request->payment_method);
+
+            $order->trackings()->create([
                 'status' => 'pending',
+                'description' => 'Pesanan dibuat. Menunggu pembayaran.',
             ]);
 
             $cart->items()->delete();
@@ -105,7 +110,9 @@ class CheckoutController extends Controller
             ->where('active', true)
             ->first();
 
-        return view('user.payment', compact('order', 'paymentAccount'));
+        $clientKey = $this->paymentService->getClientKey();
+
+        return view('user.payment', compact('order', 'paymentAccount', 'clientKey'));
     }
 
     public function uploadPayment(Request $request, $orderId)
@@ -133,15 +140,36 @@ class CheckoutController extends Controller
             ->with('success', 'Payment proof uploaded successfully.');
     }
 
-    private function generatePaymentNumber($method)
+    public function success($orderId)
     {
-        if ($method === 'Bank Transfer') {
-            return 'BCA' . strtoupper(Str::random(3)) . date('YmdHis') . mt_rand(100, 999);
-        } elseif ($method === 'GCash') {
-            return 'GCASH' . strtoupper(Str::random(2)) . date('YmdHis') . mt_rand(100, 999);
-        } elseif ($method === 'PayMaya') {
-            return 'PMAYA' . strtoupper(Str::random(2)) . date('YmdHis') . mt_rand(100, 999);
+        $order = Order::with('payment')->findOrFail($orderId);
+
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
         }
-        return 'PAY' . strtoupper(Str::random(4)) . date('YmdHis');
+
+        $payment = $order->payment;
+
+        return view('user.payment-success', compact('order', 'payment'));
+    }
+
+    public function failure($orderId, Request $request)
+    {
+        $order = Order::with('payment')->findOrFail($orderId);
+
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $reason = $request->get('reason', 'Your payment could not be processed.');
+
+        return view('user.payment-failure', compact('order', 'reason'));
+    }
+
+    public function callback(Request $request)
+    {
+        $result = $this->paymentService->handleCallback($request->all());
+
+        return response()->json($result);
     }
 }

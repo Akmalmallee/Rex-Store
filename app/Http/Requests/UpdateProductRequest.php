@@ -26,13 +26,9 @@ class UpdateProductRequest extends FormRequest
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
-            'sizes' => 'nullable|array',
-            'sizes.*.size' => 'required_with:sizes|string',
-            'sizes.*.stock' => 'required_with:sizes|integer|min:0',
-            'colors' => 'nullable|array',
-            'colors.*.color' => 'required_with:colors|string|max:255',
-            'colors.*.color_code' => 'nullable|string|max:255',
-            'colors.*.stock' => 'required_with:colors|integer|min:0',
+            'sizes' => 'nullable|string',
+            'colors' => 'nullable|string',
+            'model_file' => 'nullable|file|mimes:glb,gltf|max:51200',
         ];
     }
 }

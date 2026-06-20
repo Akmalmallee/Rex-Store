@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\PaymentAccountController;
+use App\Http\Controllers\User\FittingAssistantController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/payment/{orderId}', [CheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/payment/{orderId}/upload', [CheckoutController::class, 'uploadPayment'])->name('payment.upload');
+    Route::get('/payment/{orderId}/success', [CheckoutController::class, 'success'])->name('payment.success');
+    Route::get('/payment/{orderId}/failure', [CheckoutController::class, 'failure'])->name('payment.failure');
+
+    Route::post('/payment/callback', [CheckoutController::class, 'callback'])->name('payment.callback');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
@@ -69,12 +74,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/review/store', [ProductController::class, 'reviewStore'])->name('review.store');
+
+    Route::prefix('fitting')->name('fitting.')->group(function () {
+        Route::get('/profile', [FittingAssistantController::class, 'profile'])->name('profile');
+        Route::post('/profile', [FittingAssistantController::class, 'saveProfile'])->name('profile.save');
+        Route::get('/{slug}', [FittingAssistantController::class, 'index'])->name('index');
+        Route::get('/{slug}/recommendations', [FittingAssistantController::class, 'getRecommendations'])->name('recommendations');
+        Route::get('/photo', [FittingAssistantController::class, 'photoPage'])->name('photo');
+        Route::post('/photo/upload', [FittingAssistantController::class, 'uploadPhoto'])->name('photo.upload');
+        Route::get('/history', [FittingAssistantController::class, 'history'])->name('history');
+        Route::post('/recommendations/{id}/dismiss', [FittingAssistantController::class, 'dismissRecommendation'])->name('dismiss');
+        Route::post('/sessions/{sessionId}/feedback', [FittingAssistantController::class, 'feedback'])->name('feedback');
+    });
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
     Route::resource('/products', AdminProductController::class);
+
     Route::post('/products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
 
     Route::resource('/categories', CategoryController::class);

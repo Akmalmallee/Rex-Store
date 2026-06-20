@@ -6,24 +6,17 @@ use Illuminate\Support\Facades\Storage;
 
 class ImageHelper
 {
-    public static function getImageUrl($imagePath, $model = null)
+    public static function getImageUrl($path, $model = null)
     {
-        if (!$imagePath) {
-            return 'https://picsum.photos/seed/default/800/1000';
+        if (!$path) return '';
+        if (str_starts_with($path, 'http')) return $path;
+        
+        // If path is already a full storage path, use Storage::url
+        if (str_starts_with($path, 'products/') || str_starts_with($path, 'banners/') || str_starts_with($path, 'payments/')) {
+            return Storage::disk('public')->url($path);
         }
-
-        if (str_starts_with($imagePath, 'http')) {
-            return $imagePath;
-        }
-
-        $url = Storage::url($imagePath);
-
-        // Add cache buster if model is provided
-        if ($model && method_exists($model, 'getUpdatedAtColumn')) {
-            $timestamp = $model->updated_at->timestamp ?? time();
-            $url .= '?t=' . $timestamp;
-        }
-
-        return $url;
+        
+        // Fallback for backward compatibility
+        return '/uploads/' . ltrim($path, '/');
     }
 }

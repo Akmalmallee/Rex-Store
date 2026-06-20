@@ -12,7 +12,7 @@ class ProductController extends Controller
     public function show($slug)
     {
         $product = Product::where('slug', $slug)
-            ->with(['images', 'sizes', 'colors', 'reviews.user'])
+            ->with(['images', 'sizes', 'colors', 'reviews.user', 'productModel'])
             ->firstOrFail();
 
         $related = Product::where('category_id', $product->category_id)
